@@ -3,3 +3,7 @@
 [figma](https://www.figma.com/file/ctT3WCsjCUzdSopAZWvAFA/pass.in-(Community)?type=design&node-id=4003-2975&mode=design&t=wDsX02fPU8FkcUH7-0)
 
 [tailwind forms plugin](https://github.com/tailwindlabs/tailwindcss-forms)
+
+[fakerJS](https://fakerjs.dev/guide/)
+
+[Day.js](https://day.js.org/)
