@@ -5,25 +5,50 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { IconButton } from './icon-button'
 import * as Table from './table'
 import { Checkbox } from './checkbox'
-import { attendees } from '../data/attendees'
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 
 dayjs.extend(relativeTime)
 dayjs.locale('pt-br')
 
-const perPages = [5, 10, 25, 50, 100];
+const perPages = [10, 25, 50, 100];
+
+interface Attendee {
+  id: number
+  name: string
+  email: string
+  createdAt: string
+  checkedInAt: string | null
+}
 
 export function AttendeeList(){
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(perPages[0])
+  const [attendees, setAttendees] = useState<Attendee[]>([])
+  const [total, setTotal] = useState(0)
 
-  const totalPages = Math.ceil(attendees.length / perPage)
-  const sliceStart = (page - 1) * perPage
-  const sliceEnd = page * perPage
+  const totalPages = Math.ceil(total / perPage)
+
+  useEffect(() => {
+    const url = new URL('http://localhost:3333/events/9e9bd979-9d10-4915-b339-3786b1634f33/attendees')
+    
+    if(search.length > 0) {
+      url.searchParams.set('query', search)
+    }
+    url.searchParams.set('perPage', String(perPage))
+    url.searchParams.set('pageIndex', String(page - 1))
+
+    fetch(url.toString())
+      .then(response => response.json())
+      .then(data => {
+        setAttendees(data.attendees)
+        setTotal(data.total)
+    })
+  },[page, perPage, search])
 
   function onSearchInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     setSearch(event.target.value)
+    goToFirstPage()
   }
   
   function goToNextPage(): void {
@@ -68,7 +93,6 @@ export function AttendeeList(){
             onChange={onSearchInputChange}
           />
         </div>
-          {search}
 
       </div>
 
@@ -87,7 +111,7 @@ export function AttendeeList(){
         </thead>
 
         <tbody>
-          {attendees.slice(sliceStart, sliceEnd).map(attendee => (
+          {attendees.length > 0 && attendees.map(attendee => (
             <Table.Row key={attendee.id}>              
               <Table.Cell>
                 <Checkbox />
@@ -103,7 +127,11 @@ export function AttendeeList(){
               </Table.Cell>
 
               <Table.Cell>{dayjs().to(attendee.createdAt)}</Table.Cell>
-              <Table.Cell>{dayjs().to(attendee.checkedInAt)}</Table.Cell>
+              <Table.Cell>
+                {attendee.checkedInAt === null 
+                  ? <span className='text-zinc-400'>Não fez check-in</span>
+                  : dayjs().to(attendee.checkedInAt)}
+              </Table.Cell>
 
               <Table.Cell>
                 <IconButton transparent>
@@ -117,7 +145,7 @@ export function AttendeeList(){
         <tfoot>
           <tr>
             <Table.Cell colSpan={2}>
-              Mostrando {perPage} de {attendees.length} itens
+              Mostrando {attendees.length} de {total} itens
             </Table.Cell>
 
             <Table.Cell colSpan={2}>
